@@ -284,6 +284,7 @@ delete_cont() {
 # Args: Container
 #       Object name
 #       Input file
+#       Content-type (optional)
 #
 put_obj() {
     local cont="$1"
@@ -308,8 +309,17 @@ put_obj() {
         error "Source file does not exists!"
         return 3
     fi
+
+    local mtype="$4"
+    if [[ -z "$mtype" ]]; then
+        RESP=$(curl -# -I -v -X PUT -T "$file" \
+            -H "X-Storage-Token: $API_TOKEN" "${API_URL}/${cont}/${obj}" 2>&1) 
+    else    
+        RESP=$(curl -# -I -v -X PUT -T "$file" \
+            -H "Content-Type: ${mtype}" \
+            -H "X-Storage-Token: $API_TOKEN" "${API_URL}/${cont}/${obj}" 2>&1) 
+    fi
     
-    RESP=$(curl -# -I -v -X PUT -T "$file" -H "X-Storage-Token: $API_TOKEN" "${API_URL}/${cont}/${obj}" 2>&1) 
     debug "$RESP"
 
     if echo "$RESP" | grep -E "< HTTP/1.. 204|< HTTP/1.. 201|< HTTP/1.. 202" > /dev/null ; then
